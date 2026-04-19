@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela Periódica</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1157/1157001.png">
+    <style>
+        h1 { font-size: 60px; }
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f1f5f9;
+            /* Cores das Categorias */
+            --react: #22c55e;
+            --noble: #a855f7;
+            --alkali: #ef4444;
+            --alkaline: #f97316;
+            --semi: #06b6d4;
+            --halo: #eab308;
+            --post: #3b82f6;
+            --trans: #64748b;
+            --lan: #ec4899;
+            --act: #8b5cf6;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, minmax(30px, 60px));
+            grid-template-rows: repeat(10, minmax(35px, 65px));
+            gap: 4px;
+            margin-bottom: 30px;
+        }
+
+        .element {
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+            border: 2px solid transparent;
+            position: relative;
+            background: #334155;
+        }
+
+        .element:active { transform: scale(0.95); }
+        .element.selected { border-color: white; box-shadow: 0 0 10px white; z-index: 2; }
+
+        .num { font-size: 0.65rem; position: absolute; top: 2px; left: 4px; pointer-events: none; }
+        .sym { font-size: 1.1rem; font-weight: bold; pointer-events: none; }
+        .name { font-size: 0.5rem; text-align: center; pointer-events: none; }
+
+        /* Categorias Traduzidas */
+        .nao-metal-reativo { background: var(--react); color: #000; }
+        .gases-nobres { background: var(--noble); color: #fff; }
+        .metais-alcalinos { background: var(--alkali); color: #fff; }
+        .metais-alcalino-terrosos { background: var(--alkaline); color: #fff; }
+        .semimetais { background: var(--semi); color: #000; }
+        .halogenios { background: var(--halo); color: #000; }
+        .metais-pos-transicao { background: var(--post); color: #fff; }
+        .metais-de-transicao { background: var(--trans); color: #fff; }
+        .lantanideos { background: var(--lan); color: #fff; }
+        .actinideos { background: var(--act); color: #fff; }
+
+        #info-card {
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            border: 2px solid #334155;
+        }
+        #info-card h2 { margin: 0; color: #fff; }
+        #info-card p { margin: 10px 0 0; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <h1>Tabela Periódica</h1>
+    <p style="margin-bottom: 20px;">Clique em um elemento para detalhes</p>
+
+    <div class="periodic-table" id="table"></div>
+
+    <div id="info-card">
+        <h2 id="el-name">Selecione um elemento</h2>
+        <p id="el-detail">Clique em qualquer quadrado acima.</p>
+    </div>
+
+    <script>
+        // Mapeamento para exibição bonita no card
+        const nomesCategorias = {
+            "nao-metal-reativo": "Não-metal Reativo",
+            "gases-nobres": "Gases Nobres",
+            "metais-alcalinos": "Metais Alcalinos",
+            "metais-alcalino-terrosos": "Metais Alcalino-terrosos",
+            "semimetais": "Semimetais",
+            "halogenios": "Halogênios",
+            "metais-pos-transicao": "Metais Pós-transição",
+            "metais-de-transicao": "Metais de Transição",
+            "lantanideos": "Lantanídeos",
+            "actinideos": "Actinídeos"
+        };
+
+        const elements = [
+            [1,"H","Hidrogênio","nao-metal-reativo",1,1],[2,"He","Hélio","gases-nobres",18,1],
+            [3,"Li","Lítio","metais-alcalinos",1,2],[4,"Be","Berílio","metais-alcalino-terrosos",2,2],[5,"B","Boro","semimetais",13,2],[6,"C","Carbono","nao-metal-reativo",14,2],[7,"N","Nitrogênio","nao-metal-reativo",15,2],[8,"O","Oxigênio","nao-metal-reativo",16,2],[9,"F","Flúor","halogenios",17,2],[10,"Ne","Neônio","gases-nobres",18,2],
+            [11,"Na","Sódio","metais-alcalinos",1,3],[12,"Mg","Magnésio","metais-alcalino-terrosos",2,3],[13,"Al","Alumínio","metais-pos-transicao",13,3],[14,"Si","Silício","semimetais",14,3],[15,"P","Fósforo","nao-metal-reativo",15,3],[16,"S","Enxofre","nao-metal-reativo",16,3],[17,"Cl","Cloro","halogenios",17,3],[18,"Ar","Argônio","gases-nobres",18,3],
+            [19,"K","Potássio","metais-alcalinos",1,4],[20,"Ca","Cálcio","metais-alcalino-terrosos",2,4],[21,"Sc","Escândio","metais-de-transicao",3,4],[22,"Ti","Titânio","metais-de-transicao",4,4],[23,"V","Vanádio","metais-de-transicao",5,4],[24,"Cr","Cromo","metais-de-transicao",6,4],[25,"Mn","Manganês","metais-de-transicao",7,4],[26,"Fe","Ferro","metais-de-transicao",8,4],[27,"Co","Cobalto","metais-de-transicao",9,4],[28,"Ni","Níquel","metais-de-transicao",10,4],[29,"Cu","Cobre","metais-de-transicao",11,4],[30,"Zn","Zinco","metais-de-transicao",12,4],[31,"Ga","Gálio","metais-pos-transicao",13,4],[32,"Ge","Germânio","semimetais",14,4],[33,"As","Arsênio","semimetais",15,4],[34,"Se","Selênio","nao-metal-reativo",16,4],[35,"Br","Bromo","halogenios",17,4],[36,"Kr","Criptônio","gases-nobres",18,4],
+            [37,"Rb","Rubídio","metais-alcalinos",1,5],[38,"Sr","Estrôncio","metais-alcalino-terrosos",2,5],[39,"Y","Ítrio","metais-de-transicao",3,5],[40,"Zr","Zircônio","metais-de-transicao",4,5],[41,"Nb","Nióbio","metais-de-transicao",5,5],[42,"Mo","Molibdênio","metais-de-transicao",6,5],[43,"Tc","Tecnécio","metais-de-transicao",7,5],[44,"Ru","Rutênio","metais-de-transicao",8,5],[45,"Rh","Ródio","metais-de-transicao",9,5],[46,"Pd","Paládio","metais-de-transicao",10,5],[47,"Ag","Prata","metais-de-transicao",11,5],[48,"Cd","Cádmio","metais-de-transicao",12,5],[49,"In","Índio","metais-pos-transicao",13,5],[50,"Sn","Estanho","metais-pos-transicao",14,5],[51,"Sb","Antimônio","semimetais",15,5],[52,"Te","Telúrio","semimetais",16,5],[53,"I","Iodo","halogenios",17,5],[54,"Xe","Xenônio","gases-nobres",18,5],
+            [55,"Cs","Césio","metais-alcalinos",1,6],[56,"Ba","Bário","metais-alcalino-terrosos",2,6],
+            [57,"La","Lantânio","lantanideos",4,9],[58,"Ce","Cério","lantanideos",5,9],[59,"Pr","Praseodímio","lantanideos",6,9],[60,"Nd","Neodímio","lantanideos",7,9],[61,"Pm","Promécio","lantanideos",8,9],[62,"Sm","Samário","lantanideos",9,9],[63,"Eu","Európio","lantanideos",10,9],[64,"Gd","Gadolínio","lantanideos",11,9],[65,"Tb","Térbio","lantanideos",12,9],[66,"Dy","Disprósio","lantanideos",13,9],[67,"Ho","Hólmio","lantanideos",14,9],[68,"Er","Érbio","lantanideos",15,9],[69,"Tm","Túlio","lantanideos",16,9],[70,"Yb","Itérbio","lantanideos",17,9],[71,"Lu","Lutécio","lantanideos",18,9],
+            [72,"Hf","Háfnio","metais-de-transicao",4,6],[73,"Ta","Tântalo","metais-de-transicao",5,6],[74,"W","Tungstênio","metais-de-transicao",6,6],[75,"Re","Rênio","metais-de-transicao",7,6],[76,"Os","Ósmio","metais-de-transicao",8,6],[77,"Ir","Irídio","metais-de-transicao",9,6],[78,"Pt","Platina","metais-de-transicao",10,6],[79,"Au","Ouro","metais-de-transicao",11,6],[80,"Hg","Mercúrio","metais-de-transicao",12,6],[81,"Tl","Tálio","metais-pos-transicao",13,6],[82,"Pb","Chumbo","metais-pos-transicao",14,6],[83,"Bi","Bismuto","metais-pos-transicao",15,6],[84,"Po","Polônio","metais-pos-transicao",16,6],[85,"At","Astato","halogenios",17,6],[86,"Rn","Radônio","gases-nobres",18,6],
+            [87,"Fr","Frâncio","metais-alcalinos",1,7],[88,"Ra","Rádio","metais-alcalino-terrosos",2,7],
+            [89,"Ac","Actínio","actinideos",4,10],[90,"Th","Tório","actinideos",5,10],[91,"Pa","Protactínio","actinideos",6,10],[92,"U","Urânio","actinideos",7,10],[93,"Np","Netúnio","actinideos",8,10],[94,"Pu","Plutônio","actinideos",9,10],[95,"Am","Amerício","actinideos",10,10],[96,"Cm","Cúrio","actinideos",11,10],[97,"Bk","Berquélio","actinideos",12,10],[98,"Cf","Califórnio","actinideos",13,10],[99,"Es","Enstênio","actinideos",14,10],[100,"Fm","Férmio","actinideos",15,10],[101,"Md","Mendelévio","actinideos",16,10],[102,"No","Nobélio","actinideos",17,10],[103,"Lr","Laurêncio","actinideos",18,10],
+            [104,"Rf","Rutherfórdio","metais-de-transicao",4,7],[105,"Db","Dúbnio","metais-de-transicao",5,7],[106,"Sg","Seabórgio","metais-de-transicao",6,7],[107,"Bh","Bóhrio","metais-de-transicao",7,7],[108,"Hs","Hássio","metais-de-transicao",8,7],[109,"Mt","Meitnério","metais-de-transicao",9,7],[110,"Ds","Darmstádio","metais-de-transicao",10,7],[111,"Rg","Roentgênio","metais-de-transicao",11,7],[112,"Cn","Copernício","metais-de-transicao",12,7],[113,"Nh","Nipônio","metais-pos-transicao",13,7],[114,"Fl","Fleróvio","metais-pos-transicao",14,7],[115,"Mc","Moscóvio","metais-pos-transicao",15,7],[116,"Lv","Livermório","metais-pos-transicao",16,7],[117,"Ts","Tenesso","halogenios",17,7],[118,"Og","Oganésson","gases-nobres",18,7]
+        ];
+
+        const table = document.getElementById('table');
+
+        elements.forEach(([num, sym, name, cat, col, row]) => {
+            const el = document.createElement('div');
+            el.className = `element ${cat}`;
+            el.style.gridColumn = col;
+            el.style.gridRow = row;
+            el.innerHTML = `<div class="num">${num}</div><div class="sym">${sym}</div><div class="name">${name}</div>`;
+
+            el.onclick = () => {
+                document.querySelectorAll('.element').forEach(e => e.classList.remove('selected'));
+                el.classList.add('selected');
+
+                document.getElementById('el-name').innerText = `${name} (${sym})`;
+                document.getElementById('el-detail').innerHTML = `
+                    Número Atômico: <strong>${num}</strong><br>
+                    Categoria: <strong>${nomesCategorias[cat] || cat}</strong>
+                `;
+            };
+
+            table.appendChild(el);
+        });
+    </script>
+</body>
+</html>
